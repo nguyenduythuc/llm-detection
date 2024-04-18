@@ -31,6 +31,7 @@ from miners.gpt_zero import PPLModel
 from transformers.utils import logging as hf_logging
 
 from neurons.miners.deberta_classifier import DebertaClassifier
+import requests
 
 hf_logging.set_verbosity(40)
 
@@ -57,6 +58,17 @@ class Miner(BaseMinerNeuron):
 
         self.load_state()
 
+    def get_new_prediction(self, text):
+        url = "https://www.scribbr.com/ai-detector.php"
+        params = {
+            "text": text,
+            "lang": "en"
+        }
+        response = requests.get(url, params=params)
+        data = response.json()
+        text_score = data["data"]["text_score"]
+        return text_score
+
     async def forward(
         self, synapse: detection.protocol.TextSynapse
     ) -> detection.protocol.TextSynapse:
@@ -80,7 +92,26 @@ class Miner(BaseMinerNeuron):
 
         try:
             preds = self.model.predict_batch(input_data)
-            preds = [el > 0.5 for el in preds]
+            new_preds = []
+            for i, el in enumerate(preds):
+                text = input_data[i]
+                new_pred = self.get_new_prediction(text)
+                print("old_pred:", el)
+                print("new_pred:", new_pred)
+                print("i:", i)
+                print("custom preds response for this text:", text)
+                new_preds.append(el > 0.5)
+                # if el <= 0.5:
+                #     # Get new prediction from the additional model
+                #     text = input_data[i]
+                #     new_pred = self.get_new_prediction(text)
+                #     print("new_pred:", new_pred)
+                #     print("i:", i)
+                #     print("custom preds response for this text:", text)
+                #     new_preds.append(new_pred)
+                # else:
+                #     new_preds.append(el > 0.5)
+            preds = new_preds
         except Exception as e:
             bt.logging.error('Couldnt proceed text "{}..."'.format(input_data))
             bt.logging.error(e)
@@ -124,6 +155,8 @@ class Miner(BaseMinerNeuron):
 
         Otherwise, allow the request to be processed further.
         """
+        bt.logging.trace(f"synapse: {synapse}")
+        bt.logging.trace(f"self metagraph: {self.metagraph}")
         if synapse.dendrite.hotkey not in self.metagraph.hotkeys:
             # Ignore requests from unrecognized entities.
             bt.logging.trace(
