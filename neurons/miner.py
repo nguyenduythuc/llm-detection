@@ -94,7 +94,7 @@ class Miner(BaseMinerNeuron):
             preds = self.model.predict_batch(input_data)
             new_preds = []
             for i, el in enumerate(preds):
-                # text = input_data[i]
+                text = input_data[i]
                 # new_pred = self.get_new_prediction(text)
                 print("old_pred:", el)
                 # print("new_pred:", new_pred)
