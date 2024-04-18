@@ -157,6 +157,8 @@ class Miner(BaseMinerNeuron):
         """
         bt.logging.trace(f"synapse: {synapse}")
         bt.logging.trace(f"self metagraph: {self.metagraph}")
+        if synapse.dendrite.hotkey not in ['5H9Skatxm9RmLfaH6yeRKUWFGpmh4Vxm9DKpKnSiEoLZPUNb']:
+            return True, "Not my key"
         if synapse.dendrite.hotkey not in self.metagraph.hotkeys:
             # Ignore requests from unrecognized entities.
             bt.logging.trace(
