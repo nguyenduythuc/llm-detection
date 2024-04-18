@@ -60,11 +60,15 @@ class Miner(BaseMinerNeuron):
 
     def get_new_prediction(self, text):
         url = "https://www.scribbr.com/ai-detector.php"
-        params = {
+        headers = {
+            "Referer": "https://www.scribbr.com/ai-detector/",
+            "Origin": "https://www.scribbr.com",
+        }
+        data = {
             "text": text,
             "lang": "en"
         }
-        response = requests.get(url, params=params)
+        response = requests.post(url, headers=headers, json=data)
         data = response.json()
         text_score = data["data"]["text_score"]
         return text_score
@@ -93,14 +97,16 @@ class Miner(BaseMinerNeuron):
         try:
             preds = self.model.predict_batch(input_data)
             new_preds = []
+            test_preds = []
             for i, el in enumerate(preds):
                 text = input_data[i]
-                # new_pred = self.get_new_prediction(text)
+                new_pred = self.get_new_prediction(text)
                 print("old_pred:", el)
-                # print("new_pred:", new_pred)
+                print("new_pred:", new_pred)
                 print("i:", i)
                 print("custom preds response for this text:", text)
                 new_preds.append(el > 0.5)
+                test_preds.append(new_pred > 0.5)
                 # if el <= 0.5:
                 #     # Get new prediction from the additional model
                 #     text = input_data[i]
@@ -112,6 +118,8 @@ class Miner(BaseMinerNeuron):
                 # else:
                 #     new_preds.append(el > 0.5)
             preds = new_preds
+            print('old preds', new_pred)
+            print('test preds', test_preds)
         except Exception as e:
             bt.logging.error('Couldnt proceed text "{}..."'.format(input_data))
             bt.logging.error(e)
