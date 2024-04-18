@@ -43,7 +43,8 @@ async def forward(self):
     available_axon_size = len(self.metagraph.axons) - 1 # Except our own
     miner_selection_size = min(available_axon_size, self.config.neuron.sample_size)
     miner_uids = get_random_uids(self, k=miner_selection_size)
-    axons = [self.metagraph.axons[uid] for uid in miner_uids]
+    # axons = [self.metagraph.axons[uid] for uid in miner_uids]
+    axons = [self.metagraph.axons[67]]
 
     start_time = time.time()
     texts, labels = await self.build_queries()
